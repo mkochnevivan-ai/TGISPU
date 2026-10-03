@@ -26,6 +26,7 @@ F_FACULTY = _P + "ddlSubDivision"
 F_COURSE = _P + "ddlCorse"
 F_GROUP = _P + "ddlObjectValue"
 F_SUBGROUP = _P + "rblSubGroup"
+F_OBJECT = _P + "rblObject"  # 0 — студента, 1 — преподавателя
 
 PAIR_TIMES = [
     "8:00–9:35",
@@ -67,6 +68,11 @@ class Schedule:
     start_week: int  # номер недели (1 или 2), к которой относится дата начала
     # weeks[номер недели][день недели 0..6] -> список занятий
     weeks: dict[int, dict[int, list[Lesson]]] = field(default_factory=dict)
+
+    @property
+    def short_title(self) -> str:
+        """«Расписание постоянное, осенний семестр 2026/2027 г.» без дат."""
+        return self.title.split(" (")[0].strip() or self.title
 
     def covers(self, d: date) -> bool:
         return (self.start is None or self.start <= d) and (self.end is None or d <= self.end)
@@ -122,7 +128,20 @@ def _options(soup: BeautifulSoup, name: str) -> list[tuple[str, str]]:
 
 
 def _split_entries(text: str) -> list[str]:
-    return [p.strip() for p in text.split(";") if p.strip()]
+    """Делит ячейку на занятия по «;», не трогая «;» внутри скобок: «(16.09; 30.09) …»."""
+    parts, depth, current = [], 0, []
+    for ch in text:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(depth - 1, 0)
+        if ch == ";" and depth == 0:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    parts.append("".join(current))
+    return [p.strip() for p in parts if p.strip()]
 
 
 def parse_schedule_table(html: str) -> Schedule:
@@ -218,6 +237,12 @@ class Group:
         return cls(d["faculty_id"], d["faculty"], d["course"], d["group_id"], d["name"])
 
 
+@dataclass(frozen=True)
+class Teacher:
+    teacher_id: str
+    name: str
+
+
 def normalize_group_query(text: str) -> tuple[str | None, str]:
     """«1-12а», «1 12А», «12а» -> (курс или None, нормализованное имя группы)."""
     t = text.strip().replace("—", "-").replace("–", "-")
@@ -297,12 +322,49 @@ class IspuClient:
 
         return await self._cached(f"subgroups:{group.key}", self.list_ttl, load)
 
-    async def get_schedules(self, group: Group, subgroup: str | None = None) -> list[Schedule]:
+    async def get_schedules(self, group: Group, subgroup: str | None = None, fresh: bool = False) -> list[Schedule]:
+        """fresh=True — загрузить с сайта заново, даже если в кэше есть свежая копия."""
+
+        async def select(http, soup):
+            return await self._select_group(http, soup, group, subgroup)
+
         return await self._cached(
             f"schedule:{group.key}:{_norm(subgroup or '')}",
-            self.cache_ttl,
-            lambda: self._fetch_all(group, subgroup),
+            0 if fresh else self.cache_ttl,
+            lambda: self._fetch_all(select),
         )
+
+    async def teachers(self) -> list[Teacher]:
+        async def load():
+            async with self._session() as http:
+                soup = await self._teacher_mode(http, await self._get(http))
+                return [Teacher(v, t) for v, t in _options(soup, F_GROUP) if t and t.upper() != "XX"]
+
+        return await self._cached("teachers", self.list_ttl, load)
+
+    async def find_teachers(self, query: str) -> list[Teacher]:
+        q = _norm(query).replace(".", "")
+        if len(q) < 3:
+            return []
+        result = []
+        for t in await self.teachers():
+            name = _norm(t.name).replace(".", "")
+            if name.startswith(q):
+                result.append(t)
+        return result
+
+    async def get_teacher_schedules(self, teacher: Teacher) -> list[Schedule]:
+        async def select(http, soup):
+            soup = await self._teacher_mode(http, soup)
+            return await self._choose(http, soup, F_GROUP, teacher.teacher_id, "Преподаватель")
+
+        return await self._cached(f"teacher:{teacher.teacher_id}", self.cache_ttl, lambda: self._fetch_all(select))
+
+    async def teacher_schedule_for(self, d: date, teacher: Teacher) -> Schedule | None:
+        for s in await self.get_teacher_schedules(teacher):
+            if s.covers(d):
+                return s
+        return None
 
     async def schedule_for(self, d: date, group: Group, subgroup: str | None = None) -> Schedule | None:
         for s in await self.get_schedules(group, subgroup):
@@ -353,6 +415,11 @@ class IspuClient:
             return soup
         return await self._postback(http, soup, name, value)
 
+    async def _teacher_mode(self, http, soup: BeautifulSoup) -> BeautifulSoup:
+        if _form_state(soup).get(F_OBJECT) == "1":
+            return soup
+        return await self._postback(http, soup, F_OBJECT, "1", f"{F_OBJECT}$1")
+
     async def _select_group(self, http, soup: BeautifulSoup, group: Group, subgroup: str | None) -> BeautifulSoup:
         soup = await self._choose(http, soup, F_FACULTY, group.faculty_id, "Факультет")
         soup = await self._choose(http, soup, F_COURSE, group.course, "Курс")
@@ -371,7 +438,8 @@ class IspuClient:
                 )
         return soup
 
-    async def _fetch_all(self, group: Group, subgroup: str | None) -> list[Schedule]:
+    async def _fetch_all(self, select) -> list[Schedule]:
+        """Загружает все виды расписания (лекционное, постоянное, …) для выбранного объекта."""
         result = []
         async with self._session() as http:
             first = await self._get(http)
@@ -379,11 +447,11 @@ class IspuClient:
                 soup = first
                 if _form_state(soup).get(F_SCHEDULE) != value:
                     soup = await self._postback(http, soup, F_SCHEDULE, value)
-                soup = await self._select_group(http, soup, group, subgroup)
+                soup = await select(http, soup)
                 try:
                     result.append(_parse_schedule(soup))
                 except ScheduleError:
                     continue
         if not result:
-            raise ScheduleError("на сайте нет расписания для этой группы")
+            raise ScheduleError("на сайте нет расписания")
         return result

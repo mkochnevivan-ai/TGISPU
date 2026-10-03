@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 
 
-class UserStorage:
-    """Настройки пользователей (подгруппа, подписка) в JSON-файле."""
+class JsonStore:
+    """Простое хранилище «ключ → словарь» в JSON-файле."""
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
@@ -23,12 +23,19 @@ class UserStorage:
         tmp.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
         os.replace(tmp, self.path)
 
-    def get(self, chat_id: int) -> dict:
-        return self._data.get(str(chat_id), {})
+    def get(self, key) -> dict:
+        return self._data.get(str(key), {})
 
-    def update(self, chat_id: int, **values) -> None:
-        self._data.setdefault(str(chat_id), {}).update(values)
+    def update(self, key, **values) -> None:
+        self._data.setdefault(str(key), {}).update(values)
         self._save()
 
-    def subscribers(self) -> list[tuple[int, dict]]:
-        return [(int(k), v) for k, v in self._data.items() if v.get("subscribed")]
+    def items(self) -> list[tuple[str, dict]]:
+        return list(self._data.items())
+
+
+class UserStorage(JsonStore):
+    """Настройки чатов: группа, подгруппа, рассылки."""
+
+    def chats(self) -> list[tuple[int, dict]]:
+        return [(int(k), v) for k, v in self._data.items()]

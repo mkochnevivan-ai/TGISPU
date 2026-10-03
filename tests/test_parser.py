@@ -42,12 +42,69 @@ def test_rowspan_cells_are_repeated():
 
 def test_format_day():
     s = load("permanent_12a.html")
-    text = format_day(date(2026, 10, 5), s)
-    assert "Понедельник, 05.10.2026" in text
-    assert "<b>Информат.</b> (лаб.)" in text
-    assert "1-я неделя" in text
+    text = format_day(date(2026, 10, 5), s, owner="1-12А · подгр. х")
+    assert "Понедельник, 5 октября" in text
+    assert "<b>Информатика</b> · <i>лабораторная</i>" in text
+    assert "📍 А322а" in text and "👤 Самышина О.В." in text
+    assert "1-12А · подгр. х · 1-я неделя" in text
+    assert "Итого: 2 пары · 11:40–15:35" in text
     assert "Пар нет" in format_day(date(2026, 10, 11), s)
     assert "расписания на сайте нет" in format_day(date(2026, 10, 11), None)
+
+
+def test_current_pair_is_marked():
+    from datetime import datetime
+
+    from ispu_bot.config import TZ
+
+    s = load("permanent_12a.html")
+    text = format_day(date(2026, 10, 5), s, now=datetime(2026, 10, 5, 12, 0, tzinfo=TZ))
+    assert "сегодня" in text
+    assert "идёт, ещё 1 ч 16 мин" in text
+
+
+def test_parse_lesson():
+    from ispu_bot.formatting import parse_lesson
+
+    info = parse_lesson("( с 28.09) Кураторский час сем. Куратор А325в")
+    assert (info.subject, info.kind, info.who, info.room, info.note) == ("Кураторский час", "практика", "Куратор", "А325в", "с 28.09")
+    info = parse_lesson("Высш.матем. лек. Торопова Е.К. А209")
+    assert info.subject == "Высшая математика" and info.who_icon == "👤"
+    info = parse_lesson("Материалы ядерной техники лек. 4-11, 12, 12А В422")
+    assert info.who == "4-11, 12, 12А" and info.who_icon == "👥" and info.room == "В422"
+    info = parse_lesson("Физическая культура и спорт сем. XX С324")
+    assert info.who == "" and info.room == "С324"
+
+
+def test_format_now():
+    from datetime import datetime
+
+    from ispu_bot.config import TZ
+    from ispu_bot.formatting import format_now
+
+    s = load("permanent_12a.html")
+    d = date(2026, 10, 5)
+    text = format_now(datetime(2026, 10, 5, 13, 30, tzinfo=TZ), s.lessons_on(d), None)
+    assert "Следующая — 4 пара в 14:00" in text and "через 31 мин" in text
+    text = format_now(datetime(2026, 10, 5, 18, 0, tzinfo=TZ), s.lessons_on(d), (date(2026, 10, 6), s.lessons_on(date(2026, 10, 6))))
+    assert "пары закончились" in text and "Ближайшая пара — завтра, 2 пара в 9:50" in text
+
+
+def test_split_entries_keeps_parentheses():
+    from ispu_bot.scraper import _split_entries
+
+    assert _split_entries("(16.09; 30.09) Волонтёрство сем. X А1;  Ин.яз. сем. Y Б2") == [
+        "(16.09; 30.09) Волонтёрство сем. X А1",
+        "Ин.яз. сем. Y Б2",
+    ]
+
+
+def test_changed_days():
+    from ispu_bot.notifications import changed_days
+
+    old = {"1:0": ["3|A"], "2:3": ["1|B"]}
+    new = {"1:0": ["3|A"], "2:3": ["1|C"], "1:5": ["2|D"]}
+    assert changed_days(old, new) == [(1, 5), (2, 3)]
 
 
 def test_group_query_normalization():
