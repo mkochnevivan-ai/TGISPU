@@ -8,8 +8,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import date, datetime, time as dtime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import date, datetime, time as dtime, timedelta, timezone, tzinfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.client.default import DefaultBotProperties
@@ -48,7 +48,19 @@ def _load_dotenv(path: str = ".env") -> None:
 
 _load_dotenv()
 
-TZ = ZoneInfo(os.getenv("TZ_NAME", "Europe/Moscow"))
+
+
+def _load_tz(name: str) -> tzinfo:
+    # В Windows нет системной базы часовых поясов: нужен пакет tzdata.
+    # Если его нет — считаем время по МСК (UTC+3).
+    try:
+        return ZoneInfo(name)
+    except ZoneInfoNotFoundError:
+        log.warning("time zone %s not found (pip install tzdata), using UTC+3", name)
+        return timezone(timedelta(hours=3), "MSK")
+
+
+TZ = _load_tz(os.getenv("TZ_NAME", "Europe/Moscow"))
 NOTIFY_TIME = os.getenv("NOTIFY_TIME", "07:00")
 DATA_FILE = os.getenv("DATA_FILE", "data/users.json")
 
