@@ -48,3 +48,15 @@ def test_format_day():
     assert "1-я неделя" in text
     assert "Пар нет" in format_day(date(2026, 10, 11), s)
     assert "расписания на сайте нет" in format_day(date(2026, 10, 11), None)
+
+
+def test_group_query_normalization():
+    from ispu_bot.scraper import Group, normalize_group_query
+
+    assert normalize_group_query("1-12а") == ("1", "12а")
+    assert normalize_group_query("1 12А") == ("1", "12а")
+    assert normalize_group_query("12a") == (None, "12а")  # латинская «a»
+    assert normalize_group_query("1-ТЭ-1") == ("1", "тэ-1")
+    g = Group("10000", "ИФФ", "1", "101030", "12А")
+    assert g.title == "1-12А"
+    assert Group.from_dict(g.to_dict()) == g

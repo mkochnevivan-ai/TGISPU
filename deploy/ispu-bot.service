@@ -1,0 +1,16 @@
+# systemd-сервис: бот стартует вместе с сервером и перезапускается при сбоях.
+# Установка: см. раздел «Круглосуточная работа» в README.md
+[Unit]
+Description=ISPU schedule Telegram bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/ispu-bot
+ExecStart=/opt/ispu-bot/.venv/bin/python -m ispu_bot
+Restart=always
+RestartSec=10
+User=ispubot
+
+[Install]
+WantedBy=multi-user.target

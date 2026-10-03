@@ -1,32 +1,34 @@
-# Бот расписания ИГЭУ (группа 1-12А)
+# Бот расписания ИГЭУ
 
-Telegram-бот, который берёт расписание группы **1-12А (ИФФ)** с сайта
-[schedule.ispu.ru](http://schedule.ispu.ru/) и присылает его в Telegram.
+Telegram-бот, который показывает расписание **любой группы ИГЭУ** с сайта
+[schedule.ispu.ru](http://schedule.ispu.ru/).
 
 ## Возможности
 
+- 🎓 каждый пользователь выбирает свою группу: кнопками (факультет → курс → группа)
+  или просто написав название, например `1-12а`;
+- 👥 выбор подгруппы («х», «хх» и т.п.), если группа на них делится;
 - 📅 расписание на сегодня / завтра / любую дату (`/day 15.10`);
 - 🗓 расписание на текущую и следующую неделю;
 - автоматически определяет номер недели (1-я / 2-я) по дате начала, указанной на сайте;
 - сам выбирает нужное расписание (лекционное в начале семестра, затем постоянное)
   по датам действия, указанным на сайте;
-- 👥 выбор подгруппы («х» или «хх»), запоминается для каждого чата;
 - 🔔 ежедневная утренняя рассылка (`/subscribe`), по умолчанию в 07:00 МСК;
 - кэширует расписание на 30 минут; если сайт недоступен — отдаёт последнюю копию.
 
-## Запуск
+## Быстрый запуск на своём компьютере
 
-1. Создайте бота у [@BotFather](https://t.me/BotFather) и получите токен.
-2. Установите зависимости (нужен Python 3.10+):
+1. Создайте бота у [@BotFather](https://t.me/BotFather) (`/newbot`) и получите токен.
+2. Установите Python 3.10+ и зависимости:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Скопируйте `.env.example` в `.env` и впишите токен:
+3. Создайте файл `.env` (можно скопировать `.env.example`) и впишите токен:
 
-   ```bash
-   cp .env.example .env
+   ```
+   BOT_TOKEN=123456789:AAH...
    ```
 
 4. Запустите:
@@ -35,37 +37,70 @@ Telegram-бот, который берёт расписание группы **1
    python -m ispu_bot
    ```
 
-### Docker
+Бот работает, пока запущена программа. Чтобы он отвечал круглосуточно — см. ниже.
+
+## Круглосуточная работа (сервер)
+
+Боту нужен компьютер, который включён всегда. Проще всего арендовать самый дешёвый
+VPS с Ubuntu (1 ядро, 512 МБ–1 ГБ памяти более чем достаточно). Подойдёт и
+домашний компьютер / Raspberry Pi, который не выключается.
+
+### Вариант A: systemd (без Docker)
+
+Подключитесь к серверу по SSH и выполните:
 
 ```bash
-docker build -t ispu-bot .
-docker run -d --restart=unless-stopped --env-file .env -v ispu-data:/app/data ispu-bot
+sudo apt update && sudo apt install -y git python3-venv
+sudo useradd -r -m -d /opt/ispu-bot ispubot
+sudo -u ispubot git clone -b claude/telegram-bot-pome72 https://github.com/mkochnevivan-ai/TGISPU.git /opt/ispu-bot
+cd /opt/ispu-bot
+sudo -u ispubot python3 -m venv .venv
+sudo -u ispubot .venv/bin/pip install -r requirements.txt
+echo 'BOT_TOKEN=ваш_токен' | sudo -u ispubot tee .env
+sudo cp deploy/ispu-bot.service /etc/systemd/system/
+sudo systemctl enable --now ispu-bot
 ```
+
+Полезные команды:
+
+```bash
+sudo systemctl status ispu-bot      # работает ли
+sudo journalctl -u ispu-bot -f      # логи
+sudo systemctl restart ispu-bot     # перезапуск
+# обновление кода:
+cd /opt/ispu-bot && sudo -u ispubot git pull && sudo systemctl restart ispu-bot
+```
+
+### Вариант Б: Docker Compose
+
+```bash
+git clone -b claude/telegram-bot-pome72 https://github.com/mkochnevivan-ai/TGISPU.git ispu-bot
+cd ispu-bot
+echo 'BOT_TOKEN=ваш_токен' > .env
+docker compose up -d --build
+```
+
+> Если репозиторий приватный, для `git clone` понадобится
+> [токен доступа GitHub](https://github.com/settings/tokens) вместо пароля.
 
 ## Настройки
 
 Все параметры задаются переменными окружения (или в `.env`):
 
-| Переменная      | По умолчанию      | Описание                                  |
-|-----------------|-------------------|-------------------------------------------|
-| `BOT_TOKEN`     | —                 | токен бота (обязательно)                  |
-| `ISPU_FACULTY`  | `ИФФ`             | факультет, как на сайте                   |
-| `ISPU_COURSE`   | `1`               | курс                                      |
-| `ISPU_GROUP`    | `12А`             | группа, как в списке на сайте             |
-| `ISPU_SUBGROUP` | `х`               | подгруппа по умолчанию                    |
-| `NOTIFY_TIME`   | `07:00`           | время ежедневной рассылки                 |
-| `TZ_NAME`       | `Europe/Moscow`   | часовой пояс                              |
-| `DATA_FILE`     | `data/users.json` | где хранить настройки пользователей       |
-
-Поменяв `ISPU_FACULTY` / `ISPU_COURSE` / `ISPU_GROUP`, бота можно использовать
-для любой другой группы ИГЭУ.
+| Переменная    | По умолчанию      | Описание                            |
+|---------------|-------------------|-------------------------------------|
+| `BOT_TOKEN`   | —                 | токен бота (обязательно)            |
+| `NOTIFY_TIME` | `07:00`           | время ежедневной рассылки           |
+| `TZ_NAME`     | `Europe/Moscow`   | часовой пояс                        |
+| `DATA_FILE`   | `data/users.json` | где хранить настройки пользователей |
 
 ## Как это работает
 
 Сайт расписания сделан на ASP.NET WebForms: выбор факультета, группы и подгруппы
 происходит postback-запросами. Бот повторяет эти запросы (`ispu_bot/scraper.py`),
 разбирает таблицу `#sheduleTable` с учётом объединённых ячеек (`rowspan`)
-и форматирует результат (`ispu_bot/formatting.py`).
+и форматирует результат (`ispu_bot/formatting.py`). Список всех групп загружается
+при старте и обновляется раз в 6 часов.
 
 > Сайт по HTTPS работает только со старыми версиями TLS, поэтому запросы идут по HTTP.
 
