@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1"><title>
+	Расписание ИГЭУ
+</title><link href="css/Style.css" type="text/css" rel="stylesheet" /></head>
+<body style="display:flex">
+
+    <form method="post" action="./" id="form1" style="width:100%; display: flex; flex-direction: column;">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJNzkzNDk4NjU4D2QWAmYPZBYCAgMPZBYCAgEPZBYMZg8QZA8WAmYCARYCEAUU0LvQtdC60YbQuNC+0L3QvdC+0LUFAzE0M2cQBRTQv9C+0YHRgtC+0Y/QvdC90L7QtQUDMTQ0ZxYBAgFkAgEPEGRkFgFmZAIDDxAPFgIeC18hRGF0YUJvdW5kZ2QQFQYI0JjQktCi0KQG0JjQpNCkBtCi0K3QpAbQpNCt0KMG0K3QnNCkBtCt0K3QpBUGBTMwMDAwBTEwMDAwBTQwMDAwBTIwMDAwBTYwMTAwBTU5OTAwFCsDBmdnZ2dnZxYBAgFkAgUPEA8WAh8AZ2QQFQUBMQEyATMBNAE1FQUBMQEyATMBNAE1FCsDBWdnZ2dnFgFmZAIGDxAPFgIfAGdkEBUGAjExAjEyBDEy0JACMTMCMTUCMTYVBgM4NjkDODcwBjEwMTAzMAM4NzEDODcyBjEwMTAzMxQrAwZnZ2dnZ2cWAQICZAIIDxAPFgIfAGdkEBUCAtGFBNGF0YUVAgQ2MjA1BDYyMTkUKwMCZ2cWAWZkZMXMLN3vXjmJWZNePU/jUeWoNkyjCyW2zYDMQD2M2w5J" />
+
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="CA0B0334" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEdABr1x/jRpyrFSsN6XkMCoNEOmhqfPGCY3WoEzI4mMXI2rR0YYdC5EA8bMolI76t9MrG6BJh7Yu3+E5SLiWMnB5GrakKKe81d4Oj4z8PzcMNcLPy0FCWBAH6g3Y0Aj8PbvzPGsA76/7SxxpA2ST1OPDqFi7DkIIYSXuULFZBukxpUFEwfMMuFpzNNk0FEjeX6hkRIzHL2i0Nf+SsqmeWurs1rrsH61eLuypN1OrwbtnEm+osW+zc02Oan55JcJICv7XKEJXohAwJYL1JVqylkbD9M4Y3+WYhuhakmWkEyWZ9DVo7NaJQCEBS25tVMJEk2A23YNHWF+8pJeSu+w8igZfQ6Rcrgr4rPiSTXfMndXHvdFeatSGeA3ai/ohLYEjQ2a6Q1SLaik+jEnFD7f+Ro5tpOwTwgT8fDlG2RaKe/wN6PVndHuMfPOSI6OnXdbIqw0kwvz13hq+2L4n9RySFSahiLrnsgAaPZ+zDTSWiM94CiNHIWspuT9GcBAXephKGiPhvEKhOBlzuYBoCMBvjuKKK1PL5t7xXl1rBS3uCCQlC6c7yBXg9oOutGDwsI1QF7jEnmz9KpXF5NXYpWn5A3T566" />
+        
+            
+    <script type="text/javascript">
+        var array = new Array(14);
+        var FirstWeekArray;
+        var SecondWeekArray;
+        /*document.body.addEventListener(onload, documentOnLoad, false);*/
+        document.body.onload = function () {
+            if (parseInt(document.all.rs.value) != -2) {
+                if (parseInt(document.all.rs.value) == 1)
+                    OpenInExcelOneSchedule();
+                if (parseInt(document.all.rs.value) == -1)
+                    alert('Выберите расписания для печати.');
+
+                chb = document.getElementById('chbShedule');
+                table = document.getElementById('sheduleTable')
+                array = new Array(14);
+
+                for (var i = 2; i < 16; i++)
+                    array[i - 2] = table.rows[i].clientHeight;
+            }
+        }
+
+        function OpenInExcelOneSchedule() {
+            if (parseInt(document.all.rs.value) == 1) {
+                try {
+			    
+                    oXL = new Object();
+                    oXL = new ActiveXObject("Excel.Application");
+
+                    oBook = oXL.Workbooks.Open("http://" + "schedule.ispu.ru" + "/SchedulePrint.aspx");
+                    //                    oBook = oXL.Workbooks.Open("http://localhost:3431/13092011/SchedulePrint.aspx");
+                    oSheet = oBook.ActiveSheet;
+
+                    var ind ='2';
+
+				    
+                    oSheet.Cells(ind, 1) = 'Подразделение: ' +'ИФФ.' + ' Группа: ' +'1-12Ах.' + ' ' + ' Семестр: ' +'осенний';
+				    
+
+                    var i4 = parseInt('19');
+                    var j4 = parseInt('4');
+
+                    for (var i = i4; i > 4; i--) {
+                        bol = 1;
+                        for (var j = j4; j < 9; j++)
+                            if (oSheet.Cells(i, j) != "")
+                                bol = 0;
+                        if (bol == 1 || oSheet.Rows(i + ":" + i).RowHeight < 30)
+                            oSheet.Rows(i + ":" + i).RowHeight = 30;
+                    }
+
+                    oSheet.Columns("A:A").ColumnWidth = 2;
+                    oSheet.Columns("B:B").ColumnWidth = 9;
+                    oSheet.PageSetup.Orientation = 2;
+                    if (i4 == 19)
+                        oSheet.Range("A4:A5").Orientation = 90;
+                    else
+                        oSheet.Range("A5:A6").Orientation = 90;
+
+                    //параметры Excel-таблицы
+                    //переменные, отвечающие за выравнивание текста в ячейке
+                    var xlCenter = -4108;
+                    var xlRight = -4152;
+                    var xlLeft = -4131;
+                    var xlContext = -5002;
+                    var xlBottom = -4107;
+
+                    rng = oSheet.Range("C6:I19");
+                    rng.HorizontalAlignment = xlCenter;
+                    rng.VerticalAlignment = xlCenter;
+                    rng.WrapText = true;
+                    rng.Orientation = 0;
+                    rng.AddIndent = false;
+                    rng.IndentLevel = 0;
+                    rng.ShrinkToFit = false;
+                    rng.ReadingOrder = xlContext;
+                    rng.MergeCells = false;
+
+                    //Настройка парметров печати.
+                    oXL.ActiveWorkbook.ActiveSheet.PageSetup.Draft = false;
+                    oXL.ActiveWorkbook.ActiveSheet.PageSetup.PaperSize = 1; //xlPaperLetter
+                    oXL.ActiveWorkbook.ActiveSheet.PageSetup.Order = 1; //xlDownThenOver;
+                    oXL.ActiveWorkbook.ActiveSheet.PageSetup.Zoom = false;
+                    oXL.ActiveWorkbook.ActiveSheet.PageSetup.FitToPagesWide = 1;
+                    oXL.ActiveWorkbook.ActiveSheet.PageSetup.FitToPagesTall = 1;
+
+                    oXL.Visible = true;
+                    oXL.UserControl = true;
+
+			
+                }
+                catch (e) {
+                    source = (e.number >> 16) & 0x1FFF;
+                    code = e.number & 0xFFFF;
+                    alert(e.description + " источник ошибки: " + source + " код:" + code);
+                    oXL.Quit();
+                }
+            }
+        }
+    </script>
+    <div class="highlighted block-section">
+        <aside class="container" role="complementary">
+            <div class="block-region region-highlighted">
+                <div id="block-edux-reactmainwidget" class="block">
+
+
+                    <div class="block-content">
+                        <div id="react-main-widget-1">
+                            <div class="ant-card ant-card-bordered css-1a3rktk" style="cursor: default; position: relative; overflow: hidden;">
+                                <div class="ant-card-body">
+                                    <div style="position: absolute; right: -100px; top: 0px; bottom: 0px; width: 400px; background: var(--secondary); transform: skew(-40deg); z-index: 0;"></div>
+                                    <div class="ant-row ant-row-space-between ant-row-middle css-1a3rktk" style="margin-left: -8px; margin-right: -8px; display: flex; align-items: center; width: 100%; position: relative; z-index: 1;">
+                                        <div class="ant-col css-1a3rktk" style="padding-left: 8px; padding-right: 8px; flex: 0 0 auto; max-width: 50%;">
+                                            <a href="http://ispu.ru/">
+                                                <div class="ant-image css-1a3rktk">
+                                                    <img class="ant-image-img css-1a3rktk" src="/images/site_logo.svg" style="object-fit: contain; width: 900px;">
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="ant-col css-1a3rktk" style="padding-left: 8px; padding-right: 8px; flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center;">
+                                            <div class="ant-space css-1a3rktk ant-space-vertical ant-space-gap-row-middle ant-space-gap-col-middle">
+                                                <div class="ant-space-item">
+                                                    <div style="display: flex; justify-content: flex-end;">
+                                                        <div class="ant-space css-1a3rktk ant-space-horizontal ant-space-align-center ant-space-gap-row-small ant-space-gap-col-small">
+                                                            <div class="ant-space-item">
+                                                                <div style="text-align: right;">
+                                                                    <div style="font-size: 19px; font-weight: 400; color: white; line-height: 22.8px;">3 октября</div>
+                                                                    <div style="font-size: 19px; font-weight: 400; color: white; line-height: 22.8px; text-align: left;">2026</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="ant-space-item-split">
+                                                                <div class="ant-divider css-1a3rktk ant-divider-vertical" role="separator" style="border-color: white; height: 40px;"></div>
+                                                            </span>
+                                                            <div class="ant-space-item">
+                                                                <div style="text-align: right;">
+                                                                    <div style="font-size: 19px; font-weight: 400; color: white; line-height: 22.8px;">2 учебная</div>
+                                                                    <div style="font-size: 19px; font-weight: 400; color: white; line-height: 22.8px; text-align: left;">неделя</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--<div class="links">
+                            <div style="margin: 0.1rem 0;">
+                                <ul class="ant-menu-submenu-title">
+                                    <li><a href="http://ispu.ru/node/9339/"><span class="ant-menu-title-content">ОЧНИКУ</span></a></li>
+                                    <li><a href="http://ispu.ru/node/17020/"><span class="ant-menu-title-content">ЗАОЧНИКУ</span></a></li>
+                                    <li><a href="http://ispu.ru/node/9530/"><span class="ant-menu-title-content">АСПИРАНТУ</span></a></li>
+                                    <li><a href="http://ispu.ru/node/18200/"><span class="ant-menu-title-content">ФПКП</span></a></li>
+                                </ul>
+                            </div>
+                        </div>-->
+                    </div>
+                    <!--/.block-content -->
+                </div>
+                <!--/.block -->
+                <div data-drupal-messages-fallback="" class="hidden"></div>
+
+            </div>
+
+        </aside>
+    </div>
+    <div class="content" style="flex: auto; display: flex; flex-direction: column; ">
+        <aside class="container" role="complementary" style="background-color: white;">
+            <div style="background-color: white; width: 100%; margin: 10px auto;">
+                <div style="margin: 0 20px">
+                    <input type="hidden" name="rs" id="rs" value="0" />
+                    
+                    <table class="search">
+                        <tr>
+                            <td>
+                                <b>Расписание</b>
+                            </td>
+                            <td style="padding: 0">
+                                <select name="ctl00$ContentPlaceHolder1$ddlSchedule" id="ContentPlaceHolder1_ddlSchedule">
+	<option value="143">лекционное</option>
+	<option selected="selected" value="144">постоянное</option>
+
+</select>
+                            </td>
+                            <td style="width: 300px">
+                                
+                                <span id="ContentPlaceHolder1_rblObject"><input id="ContentPlaceHolder1_rblObject_0" type="radio" name="ctl00$ContentPlaceHolder1$rblObject" value="0" checked="checked" /><label for="ContentPlaceHolder1_rblObject_0">студента</label><input id="ContentPlaceHolder1_rblObject_1" type="radio" name="ctl00$ContentPlaceHolder1$rblObject" value="1" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$rblObject$1\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_rblObject_1">преподавателя</label></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 103px">
+                                <span id="ContentPlaceHolder1_lblSubDivision"><b>Факультет</b></span>&nbsp;&nbsp;
+                            </td>
+                            <td style="vertical-align: middle; padding: 0" colspan="3">
+                                <select name="ctl00$ContentPlaceHolder1$ddlSubDivision" id="ContentPlaceHolder1_ddlSubDivision">
+	<option value="30000">ИВТФ</option>
+	<option selected="selected" value="10000">ИФФ</option>
+	<option value="40000">ТЭФ</option>
+	<option value="20000">ФЭУ</option>
+	<option value="60100">ЭМФ</option>
+	<option value="59900">ЭЭФ</option>
+
+</select>
+                                &nbsp;
+                    <span id="ContentPlaceHolder1_lObjectType"><b>Группа</b></span>
+                                <select name="ctl00$ContentPlaceHolder1$ddlCorse" id="ContentPlaceHolder1_ddlCorse">
+	<option selected="selected" value="1">1</option>
+	<option value="2">2</option>
+	<option value="3">3</option>
+	<option value="4">4</option>
+	<option value="5">5</option>
+
+</select>
+                                <select name="ctl00$ContentPlaceHolder1$ddlObjectValue" id="ContentPlaceHolder1_ddlObjectValue">
+	<option value="869">11</option>
+	<option value="870">12</option>
+	<option selected="selected" value="101030">12А</option>
+	<option value="871">13</option>
+	<option value="872">15</option>
+	<option value="101033">16</option>
+
+</select>
+                            </td>
+                        </tr>
+                        <tr style="height: 28px;">
+                            <td style="padding: 0">
+                                <span id="ContentPlaceHolder1_lblSubGroup"><b>Подгруппы:</b></span>
+                            </td>
+                            <td style="padding: 0" colspan="3">
+                                <span id="ContentPlaceHolder1_rblSubGroup"><input id="ContentPlaceHolder1_rblSubGroup_0" type="radio" name="ctl00$ContentPlaceHolder1$rblSubGroup" value="6205" checked="checked" /><label for="ContentPlaceHolder1_rblSubGroup_0">х</label><input id="ContentPlaceHolder1_rblSubGroup_1" type="radio" name="ctl00$ContentPlaceHolder1$rblSubGroup" value="6219" onclick="javascript:setTimeout(&#39;__doPostBack(\&#39;ctl00$ContentPlaceHolder1$rblSubGroup$1\&#39;,\&#39;\&#39;)&#39;, 0)" /><label for="ContentPlaceHolder1_rblSubGroup_1">хх</label></span>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="width: 100%; text-align: center">
+                        <span style="margin-top: 0; padding: 0; font-weight: bold;">
+                            Расписание постоянное, осенний семестр 2026/2027 г. (начало:15.09.2026 вторник 2 недели - окончание: 21.12.2026)
+                            <br />
+                            
+                        </span>
+                    </div>
+                    <div style="width: 100%">
+                        <br/><table id="sheduleTable" class="shedule"><tr class="caption"><td rowspan="2">нед</td><td width="70px" rowspan="2">Время</td><td colspan="7" class="caption">Занятия</td></tr><tr id="sheduleTable" class="caption"><td>понедельник</td><td>вторник</td><td>среда</td><td>четверг</td><td>пятница</td><td>суббота</td><td>воскресенье</td></tr><tr height="30"><td rowspan="7" class="caption">1</td><td class="caption" width="80px">8.00 - 9.35</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">9.50-11.25</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#E5FFE5"> Ин.яз. сем. Шарунова С.В. А230</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#E5FFE5">( с 28.09) Кураторский час сем. Куратор А325в</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">11.40-13.15</td><td rowspan="1" width="150px" style="background:#FFEFFD"> Информат. лаб. Самышина О.В. А322а</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Основы российской государственности лек. Лисова С.Ю. А209</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Физическая культура и спорт сем. XX С324</td><td rowspan="1" width="150px" style="background:#FFFFCC"> История России лек. Котлова Т.Б. Б316</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Основы российской государственности сем. Филиппова А.И. А406</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Информат. лек. Габитов Р.Н. А209</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">14.00-15.35</td><td rowspan="1" width="150px" style="background:#FFFFCC"> История России лек. Котлова Т.Б. Б316</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Инженерная и компьютерная графика сем. Осадчий Д.Ю. Б413а</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Высш.матем. лек. Торопова Е.К. А209</td><td rowspan="1" width="150px" style="background:#FFEFFD"> Химия лаб. Иванова Н.Г. В403</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Высш.матем. лек. Торопова Е.К. А209</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Высш.матем. сем. Ершов С.В. В352</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">15.50-17.25</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td id="maxCol" rowspan="1" width="150px"style="background:#E5FFE5"> Основы российской государственности сем. Филиппова А.И. А414</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Инженерная и компьютерная графика сем. Осадчий Д.Ю. Б331(1)</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Инженерная и компьютерная графика лек. Осадчий Д.Ю. Б316</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">17.40-19.15</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">19.25-21.00</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30" class="separator"><td rowspan="7" class="caption">2</td><td class="caption" width="80px">8.00 - 9.35</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#E5FFE5"> Ин.яз. сем. Шарунова С.В. А228</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">9.50-11.25</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#E5FFE5"> Ин.яз. сем. Шарунова С.В. А230</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFEFFD"> Осн. яд. энергет. лаб. Нагорная О.Ю. А322</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Высш.матем. сем. Ершов С.В. В344</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">11.40-13.15</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Основы российской государственности сем. Филиппова А.И. А416</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Химия лек. Иванова Н.Г. А209</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Физическая культура и спорт сем. XX С324</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Ин.яз. сем. Шарунова С.В. А231</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Осн. яд. энергет. лек. Нагорная О.Ю. А209</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Химия сем. Иванова Н.Г. В404</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">14.00-15.35</td><td rowspan="1" width="150px" style="background:#FFFFCC"> Высш.матем. лек. Торопова Е.К. А209</td><td rowspan="1" width="150px" style="background:#E5FFE5"> История России сем. Котлова Т.Б. А416</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Высш.матем. сем. Ершов С.В. В344</td><td rowspan="1" width="150px" style="background:#FFFFCC"> История России лек. Котлова Т.Б. Б301</td><td rowspan="1" width="150px" style="background:#E5FFE5"> Ин.яз. сем. Шарунова С.В. А322</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">15.50-17.25</td><td rowspan="1" width="150px" style="background:#FFEFFD"> Информат. лаб. Самышина О.В. В416</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#E5FFE5"> Инженерная и компьютерная графика сем. Осадчий Д.Ю. Б413б</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">17.40-19.15</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr><tr height="30"><td class="caption" width="80px">19.25-21.00</td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td><td rowspan="1" width="150px" style="background:#FFFFFF"></td></tr></table>
+                    </div>
+                    <br />
+                    <div style="padding-bottom: 12px">
+                    <table>
+                        <tr>
+                            <td class="legenda" style="background: #FFFFCC;"></td><td>- лекция<td class="legenda" style="background: #E5FFE5;"></td><td>- семинар, практическое занятие<td class="legenda" style="background: #FFEFFD;"></td><td>- лабораторная
+                        </tr>
+                    </table>
+                    </div>
+
+                    
+                </div>
+            </div>
+            <div id="pusher"></div>
+
+        </aside>
+
+    </div>
+        <footer class="footer-bottom footer" style="display: flex;">
+    <div class="container">
+      <div class="footer-bottom-container">
+                  <div class="website-copyright ispu-description">
+  © 2008 - 2026 ИГЭУ (Ивановский государственный энергетический университет имени В.И. Ленина).
+</div>
+                      </div><!-- /footer-bottom-container -->
+    </div>
+  </footer>
+
+
+
+    </form>
+</body>
+</html>
